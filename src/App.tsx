@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
 import { MemeCanvas } from '@/components/MemeCanvas'
 import { MemeHistory } from '@/components/MemeHistory'
 import { BlogPost } from '@/components/BlogPost'
-import { Sparkle, Download, ArrowsClockwise, Image as ImageIcon, Article } from '@phosphor-icons/react'
+import { Sparkle, Download, ArrowsClockwise, Image as ImageIcon, Article, Timer, Pause, Play } from '@phosphor-icons/react'
 import { fetchRandomCat, generateMemeCaption, createMemeImage, downloadMeme, generateBlogPost } from '@/lib/meme-utils'
 import type { CatImage, SavedMeme } from '@/lib/types'
 import { toast } from 'sonner'
@@ -22,10 +23,68 @@ function App() {
   const [isGeneratingCaption, setIsGeneratingCaption] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [savedMemes, setSavedMemes] = useKV<SavedMeme[]>('saved-memes', [])
+  const [autoGenerateEnabled, setAutoGenerateEnabled] = useKV<boolean>('auto-generate-enabled', false)
+  const [nextMemeTime, setNextMemeTime] = useState<number | null>(null)
+  const [timeRemaining, setTimeRemaining] = useState<string>('')
 
   useEffect(() => {
     loadNewCat()
   }, [])
+
+  useEffect(() => {
+    if (!autoGenerateEnabled) {
+      setNextMemeTime(null)
+      setTimeRemaining('')
+      return
+    }
+
+    const now = Date.now()
+    const oneHour = 60 * 60 * 1000
+    const nextTime = now + oneHour
+    setNextMemeTime(nextTime)
+
+    const interval = setInterval(() => {
+      const currentTime = Date.now()
+      const remaining = nextMemeTime ? nextMemeTime - currentTime : oneHour
+
+      if (remaining <= 0) {
+        generateAndSaveAutomaticMeme()
+        const newNextTime = Date.now() + oneHour
+        setNextMemeTime(newNextTime)
+      } else {
+        const minutes = Math.floor(remaining / 60000)
+        const seconds = Math.floor((remaining % 60000) / 1000)
+        setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`)
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [autoGenerateEnabled, nextMemeTime])
+
+  async function generateAndSaveAutomaticMeme() {
+    try {
+      const cat = await fetchRandomCat()
+      const caption = await generateMemeCaption()
+      const dataUrl = await createMemeImage(cat.url, caption.top, caption.bottom)
+      const blogPost = await generateBlogPost(caption.top, caption.bottom)
+      
+      const newMeme: SavedMeme = {
+        id: Date.now().toString(),
+        imageUrl: cat.url,
+        topText: caption.top,
+        bottomText: caption.bottom,
+        dataUrl,
+        createdAt: Date.now(),
+        blogPost
+      }
+      
+      setSavedMemes((current) => [newMeme, ...(current || [])])
+      toast.success('New meme automatically generated!')
+    } catch (error) {
+      toast.error('Failed to auto-generate meme')
+      console.error(error)
+    }
+  }
 
   async function loadNewCat() {
     setIsLoadingCat(true)
@@ -128,6 +187,36 @@ function App() {
           </TabsList>
 
           <TabsContent value="generator" className="space-y-6">
+            <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Timer size={24} className="text-primary" weight="duotone" />
+                    <div>
+                      <CardTitle>Auto-Generate Hourly</CardTitle>
+                      <CardDescription className="mt-1">
+                        {autoGenerateEnabled 
+                          ? `Next meme in ${timeRemaining}` 
+                          : 'Enable to create a new meme every hour'}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={autoGenerateEnabled}
+                    onCheckedChange={setAutoGenerateEnabled}
+                  />
+                </div>
+              </CardHeader>
+              {autoGenerateEnabled && (
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Play size={16} weight="fill" className="text-primary" />
+                    <span>Autonomous mode active - memes will be generated and saved automatically</span>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+
             <div className="grid lg:grid-cols-2 gap-6">
               <Card className="overflow-hidden">
                 <CardHeader>

@@ -12,17 +12,24 @@ An autonomous cat meme generator that fetches random cat images from free APIs a
 
 ## Essential Features
 
+**Autonomous Hourly Generation**
+- Functionality: Automatic timer that generates a complete meme (cat image + AI caption + blog post) every hour
+- Purpose: Creates a continuous stream of fresh memes without user interaction, making it truly autonomous
+- Trigger: Toggle switch to enable/disable, runs in background on 60-minute intervals
+- Progression: Enable toggle → Timer starts → Countdown displays → Auto-generates at 0:00 → Saves to history → Resets timer
+- Success criteria: Reliable hourly execution, clear countdown UI, persists state across sessions, can be paused/resumed
+
 **Random Cat Image Fetching**
 - Functionality: Fetches random cat images from The Cat API (free, no key required for basic usage)
 - Purpose: Provides fresh, high-quality cat photos as meme templates
-- Trigger: Page load and "New Cat" button click
+- Trigger: Page load, "New Cat" button click, and automatic hourly generation
 - Progression: Click button → API call → Image loads with fade-in → Ready for caption
 - Success criteria: Image loads within 2 seconds, displays properly, handles errors gracefully
 
 **AI Meme Caption Generation**
 - Functionality: Uses spark.llm to generate funny, contextually relevant meme captions
 - Purpose: Automates the creative process while maintaining meme quality and humor
-- Trigger: "Generate Caption" button or automatic on new image load
+- Trigger: "Generate Caption" button, automatic on hourly generation
 - Progression: Click generate → AI analyzes → Top/bottom text appears → User can edit or regenerate
 - Success criteria: Captions are funny, appropriate length, and feel authentic to meme culture
 
@@ -63,6 +70,9 @@ An autonomous cat meme generator that fetches random cat images from free APIs a
 - **Quota Limits**: Handle API rate limits gracefully, show appropriate messaging
 - **Small Screens**: Ensure meme preview and controls are fully responsive on mobile devices
 - **Blog Generation Failure**: If blog post generation fails, still save the meme but show a graceful error message
+- **Timer Persistence**: Auto-generation state persists across page refreshes, timer recalculates remaining time
+- **Background Tab**: Timer continues running even when tab is not focused
+- **Multiple Auto-Generations**: If user manually generates while auto is enabled, timer doesn't interfere or create duplicates
 
 ## Design Direction
 
@@ -113,6 +123,8 @@ Animations should enhance the playful nature of meme creation with bouncy, energ
   - Skeleton for loading states
   - Badge for new/saved indicators
   - Separator for blog post sections
+  - Switch for enabling/disabling autonomous mode
+  - CardDescription for timer countdown and status messages
   
 - **Customizations**: 
   - Custom canvas component for rendering meme with text overlay
@@ -134,6 +146,8 @@ Animations should enhance the playful nature of meme creation with bouncy, energ
   - Trash for deleting from history
   - Image for gallery view
   - Article/Document for blog posts
+  - Timer for autonomous mode indicator
+  - Play/Pause for timer status
   
 - **Spacing**: 
   - Main container: p-6 md:p-8
