@@ -85,6 +85,34 @@ export function createMemeImage(
   })
 }
 
+export async function generateBlogPost(topText: string, bottomText: string): Promise<{ title: string; content: string; author: string; publishedDate: string }> {
+  const promptText = `You are a satirical cat meme journalist writing for "The Daily Meow" - a prestigious internet publication dedicated to analyzing cat memes with absurd seriousness.
+
+Write a funny, satirical blog post analyzing this cat meme:
+Top Text: ${topText}
+Bottom Text: ${bottomText}
+
+Return ONLY valid JSON with this exact structure:
+{
+  "title": "Clickbait-style article title (40-60 chars)",
+  "content": "3-4 paragraph satirical article analyzing the meme as if it's serious cultural commentary. Use overly intellectual language, make absurd connections to philosophy/society, include fake expert quotes, and treat the cat meme like groundbreaking art. Keep it funny and ridiculous. Each paragraph should be 3-5 sentences.",
+  "author": "Funny cat-themed author name (e.g., Dr. Whiskers McFluffington, Professor Mittens)",
+  "publishedDate": "Today's date in format like 'January 15, 2024'"
+}
+
+Make it hilarious, pretentious, and absurd. Reference the meme text directly in the analysis.`
+
+  const response = await window.spark.llm(promptText, 'gpt-4o', true)
+  const parsed = JSON.parse(response)
+  
+  return {
+    title: parsed.title || 'Untitled Analysis',
+    content: parsed.content || '',
+    author: parsed.author || 'Anonymous Feline Scholar',
+    publishedDate: parsed.publishedDate || new Date().toLocaleDateString()
+  }
+}
+
 export function downloadMeme(dataUrl: string, filename: string = 'cat-meme.jpg') {
   const link = document.createElement('a')
   link.href = dataUrl

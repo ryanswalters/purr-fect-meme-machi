@@ -8,8 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { MemeCanvas } from '@/components/MemeCanvas'
 import { MemeHistory } from '@/components/MemeHistory'
-import { Sparkle, Download, ArrowsClockwise, Image as ImageIcon } from '@phosphor-icons/react'
-import { fetchRandomCat, generateMemeCaption, createMemeImage, downloadMeme } from '@/lib/meme-utils'
+import { BlogPost } from '@/components/BlogPost'
+import { Sparkle, Download, ArrowsClockwise, Image as ImageIcon, Article } from '@phosphor-icons/react'
+import { fetchRandomCat, generateMemeCaption, createMemeImage, downloadMeme, generateBlogPost } from '@/lib/meme-utils'
 import type { CatImage, SavedMeme } from '@/lib/types'
 import { toast } from 'sonner'
 
@@ -66,18 +67,23 @@ function App() {
     setIsSaving(true)
     try {
       const dataUrl = await createMemeImage(currentCat.url, topText, bottomText)
+      
+      toast.info('Generating satirical blog post...')
+      const blogPost = await generateBlogPost(topText, bottomText)
+      
       const newMeme: SavedMeme = {
         id: Date.now().toString(),
         imageUrl: currentCat.url,
         topText,
         bottomText,
         dataUrl,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        blogPost
       }
       
       setSavedMemes((current) => [newMeme, ...(current || [])])
       downloadMeme(dataUrl, `cat-meme-${newMeme.id}.jpg`)
-      toast.success('Meme saved and downloaded!')
+      toast.success('Meme saved with satirical blog post!')
     } catch (error) {
       toast.error('Failed to save meme. Please try again.')
       console.error(error)
@@ -106,14 +112,18 @@ function App() {
         </header>
 
         <Tabs defaultValue="generator" className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-6">
             <TabsTrigger value="generator" className="gap-2">
               <Sparkle size={18} />
               Generator
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-2">
               <ImageIcon size={18} />
-              History ({memesList.length})
+              Memes ({memesList.length})
+            </TabsTrigger>
+            <TabsTrigger value="blog" className="gap-2">
+              <Article size={18} />
+              Blog Posts
             </TabsTrigger>
           </TabsList>
 
@@ -221,6 +231,32 @@ function App() {
                 <MemeHistory memes={memesList} onDelete={deleteMeme} />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="blog" className="space-y-6">
+            {memesList.filter(meme => meme.blogPost).length === 0 ? (
+              <Card>
+                <CardContent className="py-12">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <Article size={48} className="text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground text-lg">No blog posts yet</p>
+                    <p className="text-muted-foreground text-sm mt-2">
+                      Create and save a meme to generate a satirical blog post
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              memesList
+                .filter(meme => meme.blogPost)
+                .map((meme) => (
+                  <BlogPost 
+                    key={meme.id} 
+                    blogPost={meme.blogPost!} 
+                    memeImageUrl={meme.dataUrl}
+                  />
+                ))
+            )}
           </TabsContent>
         </Tabs>
       </div>

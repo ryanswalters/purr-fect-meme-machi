@@ -47,6 +47,13 @@ An autonomous cat meme generator that fetches random cat images from free APIs a
 - Progression: Generate meme → Auto-save to history → View in gallery → Re-download or delete
 - Success criteria: Persists across sessions, thumbnail previews, easy management
 
+**Satirical Blog Post Generation**
+- Functionality: Uses spark.llm to generate hilarious, pretentious satirical articles analyzing each meme as if it's serious cultural commentary
+- Purpose: Adds an extra layer of humor by treating silly cat memes with absurd academic seriousness
+- Trigger: Automatic generation when meme is saved/downloaded
+- Progression: Save meme → AI generates satirical analysis → Blog post stored with meme → View in blog tab
+- Success criteria: Articles are funny, reference the meme text, use intellectual language ironically, include fake expert quotes
+
 ## Edge Case Handling
 
 - **API Failure**: Display friendly error message with retry button, fallback to cached images if available
@@ -55,6 +62,7 @@ An autonomous cat meme generator that fetches random cat images from free APIs a
 - **Empty Captions**: Disable download until at least one text field has content
 - **Quota Limits**: Handle API rate limits gracefully, show appropriate messaging
 - **Small Screens**: Ensure meme preview and controls are fully responsive on mobile devices
+- **Blog Generation Failure**: If blog post generation fails, still save the meme but show a graceful error message
 
 ## Design Direction
 
@@ -100,15 +108,17 @@ Animations should enhance the playful nature of meme creation with bouncy, energ
   - Input for manual caption editing with borderless design
   - Textarea for longer caption options
   - Tooltip for explaining features on hover
-  - Tabs for switching between generator and history views
-  - ScrollArea for meme history gallery
+  - Tabs for switching between generator, history, and blog posts views
+  - ScrollArea for meme history gallery and blog post list
   - Skeleton for loading states
   - Badge for new/saved indicators
+  - Separator for blog post sections
   
 - **Customizations**: 
   - Custom canvas component for rendering meme with text overlay
   - Custom meme text input with live character count
   - Custom gallery grid for history view with hover effects
+  - Custom blog post article component with newspaper-style layout
   
 - **States**: 
   - Buttons have pronounced hover lift and active press down animations
@@ -123,6 +133,7 @@ Animations should enhance the playful nature of meme creation with bouncy, energ
   - Shuffle/Refresh for new cat
   - Trash for deleting from history
   - Image for gallery view
+  - Article/Document for blog posts
   
 - **Spacing**: 
   - Main container: p-6 md:p-8

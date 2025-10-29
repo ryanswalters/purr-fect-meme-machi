@@ -17,4 +17,12 @@ export interface SavedMeme {
   bottomText: string
   dataUrl: string
   createdAt: number
+  blogPost?: BlogPost
+}
+
+export interface BlogPost {
+  title: string
+  content: string
+  author: string
+  publishedDate: string
 }
